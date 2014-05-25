@@ -61,6 +61,10 @@ class Session(object):
             car.position = self.ac.getCarState(i, self.acsys.CS.NormalizedSplinePosition)
             if i > 0:
                 car.relative_position = car.position - self.cars[0].position
+                if car.relative_position > 0.5:
+                    car.relative_position -= 1
+                if car.relative_position < -0.5:
+                    car.relative_position += 1
 
     def _get_sorted_cars(self):
         '''
@@ -79,7 +83,7 @@ class Session(object):
             elif i > len(cars) - 3:
                 return cars[-7:], i - len(cars) + 7
             else:
-                return cars[i - 3:i + 3], 3
+                return cars[i - 3:i + 4], 3
 
     def render(self):
         # Order cars
@@ -89,7 +93,7 @@ class Session(object):
                 label = self.ui.labels['line_%d' % i]
             except KeyError:
                 break
-            text = '%.3f %s' % (car.position, car.name)
+            text = '%.3f %.3f %s' % (car.relative_position, car.position, car.name)
             if i == j:
                 text += ' *'
             self.ac.setText(label, text)
