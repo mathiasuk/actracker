@@ -15,6 +15,15 @@
 import os
 
 
+# colors:
+RED = (1, 0, 0, 1)
+GREEN = (0, 1, 0, 1)
+BLUE = (0, 0, 1, 1)
+WHITE = (1, 1, 1, 1)
+GREY_30 = (0.3, 0.3, 0.3, 1)
+GREY_60 = (0.6, 0.6, 0.6, 1)
+
+
 class Car(object):
     '''
     Store information about car (position, player name, etc.)
@@ -25,7 +34,17 @@ class Car(object):
         self.relative_position = 0  # Position on the lap compared to current
                                     # car, from -0.5 to 0.5
         self.lap = 0
+        self.delta = 0  # Delta to player's car
         self.name = name
+
+    def get_name(self):
+        '''
+        Returns the player name, up to 40 characters
+        '''
+        if len(self.name) > 40:
+            return self.name[:40]
+        else:
+            return self.name
 
 
 class Session(object):
@@ -45,11 +64,15 @@ class Session(object):
         self.app_size_y = 0
         self.cars = []
         self.player = None  # Record the player's car
+        self.best_lap = 0
 
     def update_data(self, deltaT):
         '''
         Called by acUpdate, updates internal data
         '''
+        self.best_lap = self.ac.getCarState(0, self.acsys.CS.BestLap)
+        if not self.best_lap:
+            self.best_lap = 50000
         for i in range(30):
             try:
                 car = self.cars[i]
@@ -71,6 +94,8 @@ class Session(object):
                     car.relative_position -= 1
                 if car.relative_position < -0.5:
                     car.relative_position += 1
+                car.delta = car.relative_position * self.best_lap
+
 
         # Update the cars' race position:
         for i, car in enumerate(sorted(self.cars, key=lambda car:(-car.lap, -car.spline_pos))):
@@ -102,9 +127,26 @@ class Session(object):
         for i, car in enumerate(cars):
             try:
                 label = self.ui.labels['line_%d' % i]
+                label_delta = self.ui.labels['line_%d_delta' % i]
             except KeyError:
                 break
-            text = '%2d %.3f %.3f %s' % (car.position, car.relative_position, car.spline_pos, car.name)
+
+            text = '%2d %.3f %.3f %s' % (car.position, car.relative_position, car.spline_pos, car.get_name())
+            text_delta = ''
+            color = WHITE
+
             if i == j:
-                text += ' *'
+                color = GREY_60
+            elif car.delta < 0:
+                text_delta = '%.1f' % (car.delta / 1000)
+                if car.lap > self.player.lap:
+                    color = RED
+            elif car.delta > 0:
+                if car.lap < self.player.lap:
+                    color = GREEN
+                text_delta = '+%.1f' % (car.delta / 1000)
+
+            self.ac.setFontColor(label, *color)
+            self.ac.setFontColor(label_delta, *color)
             self.ac.setText(label, text)
+            self.ac.setText(label_delta, text_delta)

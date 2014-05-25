@@ -21,7 +21,7 @@ import os
 import sys
 import traceback
 
-app_size_x = 400
+app_size_x = 300
 app_size_y = 200
 session = None
 
@@ -72,16 +72,23 @@ class UI(object):
         self.buttons[name] = button
 
     def _create_labels(self):
-        self._create_label('line_0', '', 10, 30)
-        self._create_label('line_1', '', 10, 50)
-        self._create_label('line_2', '', 10, 70)
-        self._create_label('line_3', '', 10, 90)
-        self._create_label('line_4', '', 10, 110)
-        self._create_label('line_5', '', 10, 130)
-        self._create_label('line_6', '', 10, 150)
-        self._create_label('line_7', '', 10, 170)
-        self._create_label('line_8', '', 10, 190)
-        self._create_label('line_9', '', 10, 210)
+        y = 30
+        y_space = 20
+
+        for i in range(7):
+            self._create_label('line_%d' % i, '', 10, y)
+            self._create_label('line_%d_delta' % i, '', 250, y)
+            y += y_space
+#        self._create_label('line_0', '', 10, 30)
+#        self._create_label('line_1', '', 10, 50)
+#        self._create_label('line_2', '', 10, 70)
+#        self._create_label('line_3', '', 10, 90)
+#        self._create_label('line_4', '', 10, 110)
+#        self._create_label('line_5', '', 10, 130)
+#        self._create_label('line_6', '', 10, 150)
+#        self._create_label('line_7', '', 10, 170)
+#        self._create_label('line_8', '', 10, 190)
+#        self._create_label('line_9', '', 10, 210)
         # self._create_label('current_speed', 'Speed', 10, 30)
         # self._create_label('best_speed', 'Best', 10, 50)
         # self._create_label('current_speed_val', '', 60, 30)
