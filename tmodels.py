@@ -12,6 +12,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Copyright (C) 2014 - Mathias Andre
 
+import os
+
 
 class Car(object):
     '''
@@ -33,6 +35,7 @@ class Session(object):
         '''
         self.ac = ac
         self.acsys = acsys
+        self.app_path = os.path.dirname(os.path.realpath(__file__))
         self.ui = None
         self.app_size_x = 0
         self.app_size_y = 0
@@ -53,5 +56,34 @@ class Session(object):
                 car = Car(name)
                 self.cars.append(car)
 
-            car.position = self.ac.getCarState(0, self.acsys.CS.NormalizedSplinePosition)
-        self.ac.console('%s' % ' '.join([c.position for c in self.cars]))
+            car.position = self.ac.getCarState(i, self.acsys.CS.NormalizedSplinePosition)
+
+    def _get_sorted_cars(self):
+        '''
+        Returns a list of sorted cars and the index of the player's car
+        '''
+        # TODO: handle different modes
+        # Sort the cars by reverse position on the map
+        cars = sorted(self.cars, key=lambda car: car.position, reverse=True)
+
+        if len(cars) < 10:
+            return cars, cars.index(self.cars[0])
+        else:
+            i = cars.index(self.cars[0])
+            if i < 5:
+                return cars[:9], i
+            elif i > len(cars) - 5:
+                return cars[-9:], i - len(cars) + 9
+            else:
+                return cars[i - 5:i + 5], 5
+
+    def render(self):
+        # Order cars
+#        cars = sorted(self.cars, key=lambda car: car.position, reverse=True)
+        cars, j = self._get_sorted_cars()
+        for i, car in enumerate(cars):
+            try:
+                label = self.ui.labels['line_%d' % i]
+            except KeyError:
+                break
+            self.ac.setText(label, '--%.3f %s' % (car.position, car.name))

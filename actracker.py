@@ -12,7 +12,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Copyright (C) 2014 - Mathias Andre
 
-from models import Session
+from tmodels import Session
 
 import ac
 import acsys
@@ -41,7 +41,7 @@ class UI(object):
         self._create_labels()
 
     def _create_widget(self):
-        self.widget = ac.newApp('Racing Line')
+        self.widget = ac.newApp('ACTracker')
         ac.setSize(self.widget, app_size_x, app_size_y)
         ac.addRenderCallback(self.widget, onFormRender)
 
@@ -72,7 +72,16 @@ class UI(object):
         self.buttons[name] = button
 
     def _create_labels(self):
-        pass
+        self._create_label('line_0', '', 10, 30)
+        self._create_label('line_1', '', 10, 50)
+        self._create_label('line_2', '', 10, 70)
+        self._create_label('line_3', '', 10, 90)
+        self._create_label('line_4', '', 10, 110)
+        self._create_label('line_5', '', 10, 130)
+        self._create_label('line_6', '', 10, 150)
+        self._create_label('line_7', '', 10, 170)
+        self._create_label('line_8', '', 10, 190)
+        self._create_label('line_9', '', 10, 210)
         # self._create_label('current_speed', 'Speed', 10, 30)
         # self._create_label('best_speed', 'Best', 10, 50)
         # self._create_label('current_speed_val', '', 60, 30)
@@ -102,7 +111,7 @@ def acUpdate(deltaT):
         session.update_data(deltaT)
     except:
         exc_type, exc_value, exc_traceback = sys.exc_info()
-        session.ac.console('RacingLine Error (logged to file)')
+        session.ac.console('ACTracker Error (logged to file)')
         session.ac.log(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)))
 
 
@@ -113,5 +122,5 @@ def onFormRender(deltaT):
         session.render()
     except:
         exc_type, exc_value, exc_traceback = sys.exc_info()
-        session.ac.console('RacingLine Error (logged to file)')
+        session.ac.console('ACTracker Error (logged to file)')
         session.ac.log(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)))
