@@ -20,9 +20,11 @@ class Car(object):
     Store information about car (position, player name, etc.)
     '''
     def __init__(self, name):
+        self.spline_pos = 0
         self.position = 0
         self.relative_position = 0  # Position on the lap compared to current
                                     # car, from -0.5 to 0.5
+        self.lap = 0
         self.name = name
 
 
@@ -42,6 +44,7 @@ class Session(object):
         self.app_size_x = 0
         self.app_size_y = 0
         self.cars = []
+        self.player = None  # Record the player's car
 
     def update_data(self, deltaT):
         '''
@@ -58,13 +61,21 @@ class Session(object):
                 car = Car(name)
                 self.cars.append(car)
 
-            car.position = self.ac.getCarState(i, self.acsys.CS.NormalizedSplinePosition)
-            if i > 0:
-                car.relative_position = car.position - self.cars[0].position
+            car.spline_pos = self.ac.getCarState(i, self.acsys.CS.NormalizedSplinePosition)
+            car.lap = self.ac.getCarState(i, self.acsys.CS.LapCount)
+            if i == 0:
+                self.player = car
+            else:
+                car.relative_position = car.spline_pos - self.player.spline_pos
                 if car.relative_position > 0.5:
                     car.relative_position -= 1
                 if car.relative_position < -0.5:
                     car.relative_position += 1
+
+        # Update the cars' race position:
+        for i, car in enumerate(sorted(self.cars, key=lambda car:(-car.lap, -car.spline_pos))):
+            car.position = i + 1
+        
 
     def _get_sorted_cars(self):
         '''
@@ -75,9 +86,9 @@ class Session(object):
         cars = sorted(self.cars, key=lambda car: car.relative_position, reverse=True)
 
         if len(cars) < 8:
-            return cars, cars.index(self.cars[0])
+            return cars, cars.index(self.player)
         else:
-            i = cars.index(self.cars[0])
+            i = cars.index(self.player)
             if i < 3:
                 return cars[:7], i
             elif i > len(cars) - 3:
@@ -93,7 +104,7 @@ class Session(object):
                 label = self.ui.labels['line_%d' % i]
             except KeyError:
                 break
-            text = '%.3f %.3f %s' % (car.relative_position, car.position, car.name)
+            text = '%2d %.3f %.3f %s' % (car.position, car.relative_position, car.spline_pos, car.name)
             if i == j:
                 text += ' *'
             self.ac.setText(label, text)
