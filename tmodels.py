@@ -21,6 +21,8 @@ class Car(object):
     '''
     def __init__(self, name):
         self.position = 0
+        self.relative_position = 0  # Position on the lap compared to current
+                                    # car, from -0.5 to 0.5
         self.name = name
 
 
@@ -57,33 +59,37 @@ class Session(object):
                 self.cars.append(car)
 
             car.position = self.ac.getCarState(i, self.acsys.CS.NormalizedSplinePosition)
+            if i > 0:
+                car.relative_position = car.position - self.cars[0].position
 
     def _get_sorted_cars(self):
         '''
         Returns a list of sorted cars and the index of the player's car
         '''
         # TODO: handle different modes
-        # Sort the cars by reverse position on the map
-        cars = sorted(self.cars, key=lambda car: car.position, reverse=True)
+        # Sort the cars by reverse relative position on the map
+        cars = sorted(self.cars, key=lambda car: car.relative_position, reverse=True)
 
-        if len(cars) < 10:
+        if len(cars) < 8:
             return cars, cars.index(self.cars[0])
         else:
             i = cars.index(self.cars[0])
-            if i < 5:
-                return cars[:9], i
-            elif i > len(cars) - 5:
-                return cars[-9:], i - len(cars) + 9
+            if i < 3:
+                return cars[:7], i
+            elif i > len(cars) - 3:
+                return cars[-7:], i - len(cars) + 7
             else:
-                return cars[i - 5:i + 5], 5
+                return cars[i - 3:i + 3], 3
 
     def render(self):
         # Order cars
-#        cars = sorted(self.cars, key=lambda car: car.position, reverse=True)
         cars, j = self._get_sorted_cars()
         for i, car in enumerate(cars):
             try:
                 label = self.ui.labels['line_%d' % i]
             except KeyError:
                 break
-            self.ac.setText(label, '--%.3f %s' % (car.position, car.name))
+            text = '%.3f %s' % (car.position, car.name)
+            if i == j:
+                text += ' *'
+            self.ac.setText(label, text)
