@@ -71,8 +71,8 @@ class Session(object):
         Called by acUpdate, updates internal data
         '''
         self.best_lap = self.ac.getCarState(0, self.acsys.CS.BestLap)
-        if not self.best_lap:
-            self.best_lap = 50000
+
+        # Update cars
         for i in range(30):
             try:
                 car = self.cars[i]
@@ -96,11 +96,9 @@ class Session(object):
                     car.relative_position += 1
                 car.delta = car.relative_position * self.best_lap
 
-
         # Update the cars' race position:
-        for i, car in enumerate(sorted(self.cars, key=lambda car:(-car.lap, -car.spline_pos))):
+        for i, car in enumerate(sorted(self.cars, key=lambda car: (-car.lap, -car.spline_pos))):
             car.position = i + 1
-        
 
     def _get_sorted_cars(self):
         '''
@@ -139,11 +137,11 @@ class Session(object):
                 color = GREY_60
             elif car.delta < 0:
                 text_delta = '%.1f' % (car.delta / 1000)
-                if car.lap > self.player.lap:
-                    color = RED
+#                if car.lap > self.player.lap:
+#                    color = RED
             elif car.delta > 0:
-                if car.lap < self.player.lap:
-                    color = GREEN
+#                if car.lap < self.player.lap:
+#                    color = GREEN
                 text_delta = '+%.1f' % (car.delta / 1000)
 
             self.ac.setFontColor(label, *color)
