@@ -129,7 +129,7 @@ class Session(object):
             except KeyError:
                 break
 
-            text = '%2d %.3f %.3f %s' % (car.position, car.relative_position, car.spline_pos, car.get_name())
+            text = '%2d %s' % (car.position, car.get_name())
             text_delta = ''
             color = WHITE
 
@@ -137,11 +137,11 @@ class Session(object):
                 color = GREY_60
             elif car.delta < 0:
                 text_delta = '%.1f' % (car.delta / 1000)
-#                if car.lap > self.player.lap:
-#                    color = RED
+                if car.lap > self.player.lap:
+                    color = RED
             elif car.delta > 0:
-#                if car.lap < self.player.lap:
-#                    color = GREEN
+                if car.lap < self.player.lap:
+                    color = GREEN
                 text_delta = '+%.1f' % (car.delta / 1000)
 
             self.ac.setFontColor(label, *color)
