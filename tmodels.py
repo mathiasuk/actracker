@@ -13,6 +13,11 @@
 # Copyright (C) 2014 - Mathias Andre
 
 import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'DLLs'))
+
+from sim_info import info
 
 
 # colors:
@@ -36,6 +41,7 @@ class Car(object):
         self.lap = 0
         self.delta = 0  # Delta to player's car
         self.name = name
+        self.in_pits = False
 
     def get_name(self):
         '''
@@ -86,6 +92,10 @@ class Session(object):
 
             car.spline_pos = self.ac.getCarState(i, self.acsys.CS.NormalizedSplinePosition)
             car.lap = self.ac.getCarState(i, self.acsys.CS.LapCount)
+            car.in_pits = info.graphics.isInPit
+            
+            print car.in_pits
+
             if i == 0:
                 self.player = car
             else:
@@ -105,8 +115,9 @@ class Session(object):
         Returns a list of sorted cars and the index of the player's car
         '''
         # TODO: handle different modes
-        # Sort the cars by reverse relative position on the map
-        cars = sorted(self.cars, key=lambda car: car.relative_position, reverse=True)
+        # Sort the cars on track by reverse relative position on the map
+        cars = [ car for car in self.cars if not car.in_pits ]
+        cars = sorted(cars, key=lambda car: car.relative_position, reverse=True)
 
         if len(cars) < 8:
             return cars, cars.index(self.player)
