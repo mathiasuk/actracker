@@ -13,12 +13,6 @@
 # Copyright (C) 2014 - Mathias Andre
 
 import os
-import sys
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'DLLs'))
-
-from sim_info import info
-
 
 # colors:
 RED = (1, 0, 0, 1)
@@ -92,9 +86,11 @@ class Session(object):
 
             car.spline_pos = self.ac.getCarState(i, self.acsys.CS.NormalizedSplinePosition)
             car.lap = self.ac.getCarState(i, self.acsys.CS.LapCount)
-            car.in_pits = info.graphics.isInPit
-            
-            print car.in_pits
+            # There is currently no way to know if another car is in the pit using the API
+            # so we consider cars going slower than 20kph and close to start/finish line to
+            # be in the pits
+            car.in_pits = self.ac.getCarState(i, self.acsys.CS.SpeedKMH) < 20 and \
+                (car.spline_pos < 0.05 or car.spline_pos > 0.95)
 
             if i == 0:
                 self.player = car
@@ -115,7 +111,7 @@ class Session(object):
         Returns a list of sorted cars and the index of the player's car
         '''
         # TODO: handle different modes
-        # Sort the cars on track by reverse relative position on the map
+        # Sort the cars by reverse relative position on the map
         cars = [ car for car in self.cars if not car.in_pits ]
         cars = sorted(cars, key=lambda car: car.relative_position, reverse=True)
 
