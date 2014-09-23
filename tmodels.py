@@ -13,6 +13,9 @@
 # Copyright (C) 2014 - Mathias Andre
 
 import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'DLLs'))
+from sim_info import info
 
 # colors:
 RED = (1, 0, 0, 1)
@@ -84,6 +87,9 @@ class Session(object):
                 car = Car(name)
                 self.cars.append(car)
 
+            # The name can change if in no-booking mode
+            car.name = self.ac.getDriverName(i)
+
             car.spline_pos = self.ac.getCarState(i, self.acsys.CS.NormalizedSplinePosition)
             car.lap = self.ac.getCarState(i, self.acsys.CS.LapCount)
             # There is currently no way to know if another car is in the pit using the API
@@ -115,20 +121,31 @@ class Session(object):
         cars = [ car for car in self.cars if not car.in_pits ]
         cars = sorted(cars, key=lambda car: car.relative_position, reverse=True)
 
-        if len(cars) < 8:
-            return cars, cars.index(self.player)
-        else:
-            i = cars.index(self.player)
-            if i < 3:
-                return cars[:7], i
-            elif i > len(cars) - 3:
-                return cars[-7:], i - len(cars) + 7
+        try:
+            if len(cars) < 8:
+                return cars, cars.index(self.player)
             else:
-                return cars[i - 3:i + 4], 3
+                i = cars.index(self.player)
+                if i < 3:
+                    return cars[:7], i
+                elif i > len(cars) - 3:
+                    return cars[-7:], i - len(cars) + 7
+                else:
+                    return cars[i - 3:i + 4], 3
+        except ValueError:
+            # Player is not in the listed cars, this means that he is in the pits
+            return None, -1 
+
 
     def render(self):
         # Order cars
         cars, j = self._get_sorted_cars()
+
+        if cars is None:
+            label = self.ui.labels['line_0']
+            self.ac.setText(label, 'In Pits')
+            return
+
         for i, car in enumerate(cars):
             try:
                 label = self.ui.labels['line_%d' % i]
@@ -141,6 +158,7 @@ class Session(object):
             color = WHITE
 
             if i == j:
+                # Player's car
                 color = GREY_60
             elif car.delta < 0:
                 text_delta = '%.1f' % (car.delta / 1000)
@@ -150,6 +168,10 @@ class Session(object):
                 if car.lap < self.player.lap:
                     color = GREEN
                 text_delta = '+%.1f' % (car.delta / 1000)
+
+            if info.graphics.session != 2 and color != GREY_60:
+                # Only use colors in race mode
+                color = WHITE
 
             self.ac.setFontColor(label, *color)
             self.ac.setFontColor(label_delta, *color)
