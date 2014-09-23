@@ -96,7 +96,7 @@ class Session(object):
             # so we consider cars going slower than 20kph and close to start/finish line to
             # be in the pits
             car.in_pits = self.ac.getCarState(i, self.acsys.CS.SpeedKMH) < 20 and \
-                (car.spline_pos < 0.05 or car.spline_pos > 0.95)
+                (car.spline_pos < 0.1 or car.spline_pos > 0.9)
 
             if i == 0:
                 self.player = car
@@ -141,8 +141,14 @@ class Session(object):
         # Order cars
         cars, j = self._get_sorted_cars()
 
+        # Clear labels
+        for name, label in self.ui.labels.items():
+            self.ac.setText(label, '')
+
         if cars is None:
+            # In pits
             label = self.ui.labels['line_0']
+            self.ac.setFontColor(label, *WHITE)
             self.ac.setText(label, 'In Pits')
             return
 
@@ -153,7 +159,7 @@ class Session(object):
             except KeyError:
                 break
 
-            text = '%2d %s' % (car.position, car.get_name())
+            text = '%2d (%d) %s' % (car.position, car.lap, car.get_name())
             text_delta = ''
             color = WHITE
 
@@ -168,6 +174,12 @@ class Session(object):
                 if car.lap < self.player.lap:
                     color = GREEN
                 text_delta = '+%.1f' % (car.delta / 1000)
+            elif car.delta == 0:
+                # This should only happen on the first lap before we
+                # have a best time to calculate the delta, this should 
+                # only happen when joinging mid-race without booking
+                if car.lap > self.player.lap and i > j:
+                    color = RED
 
             if info.graphics.session != 2 and color != GREY_60:
                 # Only use colors in race mode
