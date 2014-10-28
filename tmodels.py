@@ -19,7 +19,9 @@ from sim_info import info
 
 # colors:
 RED = (1, 0, 0, 1)
+DARK_RED = (0.5, 0, 0, 1)
 GREEN = (0, 1, 0, 1)
+DARK_GREEN = (0, 0.5, 0, 1)
 BLUE = (0, 0, 1, 1)
 WHITE = (1, 1, 1, 1)
 GREY_30 = (0.3, 0.3, 0.3, 1)
@@ -48,6 +50,34 @@ class Car(object):
             return self.name[:40]
         else:
             return self.name
+
+    def status(self, player):
+        '''
+        Returns the status of the car compared to the player's
+        '''
+        if self == player:
+            return 'player'
+
+        if self.delta < 0:
+            # Car is behind player
+            if (self.lap > player.lap) or (self.lap == player.lap and self.position > player.position):
+                return 'lapping-behind'
+            elif (self.lap < player.lap) or (self.lap == player.lap and self.position < player.position):
+                return 'lapped-behind'
+            else:
+                return 'none'
+        elif self.delta > 0:
+            # Car is ahead of player
+            if (self.lap < player.lap) or (self.lap == player.lap and self.position < player.position):
+                return 'lapped-ahead'
+            elif (self.lap > player.lap) or (self.lap == player.lap and self.position > player.position):
+                return 'lapping-ahead'
+            else:
+                return 'none'
+        else:
+            # This should only happen on the first lap, or when joining
+            # mid-race without booking
+            return 'none'
 
 
 class Session(object):
@@ -114,7 +144,7 @@ class Session(object):
 
     def _get_sorted_cars(self):
         '''
-        Returns a list of sorted cars and the index of the player's car
+        Returns a list of sorted cars
         '''
         # TODO: handle different modes
         # Sort the cars by reverse relative position on the map
@@ -123,26 +153,25 @@ class Session(object):
 
         try:
             if len(cars) < 8:
-                return cars, cars.index(self.player)
+                return cars
             else:
                 i = cars.index(self.player)
                 if i < 3:
-                    return cars[:7], i
+                    return cars[:7]
                 elif i > len(cars) - 3:
-                    return cars[-7:], i - len(cars) + 7
+                    return cars[-7:]
                 else:
-                    return cars[i - 3:i + 4], 3
+                    return cars[i - 3:i + 4]
         except ValueError:
             # Player is not in the listed cars, this means that he is in the pits
-            return None, -1 
-
+            return None
 
     def render(self):
         # Order cars
-        cars, j = self._get_sorted_cars()
+        cars = self._get_sorted_cars()
 
         # Clear labels
-        for name, label in self.ui.labels.items():
+        for dummy, label in self.ui.labels.items():
             self.ac.setText(label, '')
 
         if cars is None:
@@ -163,23 +192,22 @@ class Session(object):
             text_delta = ''
             color = WHITE
 
-            if i == j:
-                # Player's car
+            status = car.status(self.player)
+
+            if status == 'player':
                 color = GREY_60
-            elif car.delta < 0:
+            elif status == 'lapping-behind':
                 text_delta = '%.1f' % (car.delta / 1000)
-                if car.lap > self.player.lap:
-                    color = RED
-            elif car.delta > 0:
-                if car.lap < self.player.lap:
-                    color = GREEN
+                color = RED
+            elif status == 'lapped-behind':
+                text_delta = '%.1f' % (car.delta / 1000)
+                color = DARK_GREEN
+            elif status == 'lapped-ahead':
                 text_delta = '+%.1f' % (car.delta / 1000)
-            elif car.delta == 0:
-                # This should only happen on the first lap before we
-                # have a best time to calculate the delta, this should 
-                # only happen when joinging mid-race without booking
-                if car.lap > self.player.lap and i > j:
-                    color = RED
+                color = GREEN
+            elif status == 'lapping-ahead':
+                text_delta = '+%.1f' % (car.delta / 1000)
+                color = DARK_RED
 
             if info.graphics.session != 2 and color != GREY_60:
                 # Only use colors in race mode
