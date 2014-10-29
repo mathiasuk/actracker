@@ -43,6 +43,7 @@ class UI(object):
     def _create_widget(self):
         self.widget = ac.newApp('ACTracker')
         ac.setSize(self.widget, app_size_x, app_size_y)
+        ac.setBackgroundOpacity(self.widget, 0.75)
         ac.addRenderCallback(self.widget, onFormRender)
 
     def _create_label(self, name, text, x, y):
