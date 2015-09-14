@@ -166,7 +166,7 @@ class Session(object):
             # Player is not in the listed cars, this means that he is in the pits
             return None
 
-    def render(self):
+    def update_ui(self):
         # Order cars
         cars = self._get_sorted_cars()
 

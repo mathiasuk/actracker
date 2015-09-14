@@ -43,7 +43,6 @@ class UI(object):
     def _create_widget(self):
         self.widget = ac.newApp('ACTracker')
         ac.setSize(self.widget, app_size_x, app_size_y)
-        ac.addRenderCallback(self.widget, onFormRender)
 
     def _create_label(self, name, text, x, y):
         label = ac.addLabel(self.widget, name)
@@ -116,17 +115,7 @@ def acUpdate(deltaT):
 
     try:
         session.update_data(deltaT)
-    except:
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        session.ac.console('ACTracker Error (logged to file)')
-        session.ac.log(repr(traceback.format_exception(exc_type, exc_value, exc_traceback)))
-
-
-def onFormRender(deltaT):
-    global session
-
-    try:
-        session.render()
+        session.update_ui()
     except:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         session.ac.console('ACTracker Error (logged to file)')
