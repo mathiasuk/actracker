@@ -60,20 +60,20 @@ class Car(object):
 
         if self.delta < 0:
             # Car is behind player
-            if (self.lap > player.lap) or (self.lap == player.lap and self.position > player.position):
+            if (self.lap > player.lap) or (self.lap == player.lap and self.spline_pos > player.spline_pos):
                 return 'lapping-behind'
-            elif (self.lap < player.lap) or (self.lap == player.lap and self.position < player.position):
+            elif (self.lap < player.lap) and not ((self.lap == (player.lap - 1)) and (self.spline_pos > player.spline_pos)):
                 return 'lapped-behind'
             else:
-                return 'none'
+                return 'racing-behind'
         elif self.delta > 0:
             # Car is ahead of player
-            if (self.lap < player.lap) or (self.lap == player.lap and self.position < player.position):
+            if (self.lap < player.lap) or (self.lap == player.lap and self.spline_pos < player.spline_pos):
                 return 'lapped-ahead'
-            elif (self.lap > player.lap) or (self.lap == player.lap and self.position > player.position):
+            elif (self.lap > player.lap) and not (self.spline_pos < player.spline_pos):
                 return 'lapping-ahead'
             else:
-                return 'none'
+                return 'racing-ahead'
         else:
             # This should only happen on the first lap, or when joining
             # mid-race without booking
@@ -208,6 +208,10 @@ class Session(object):
             elif status == 'lapping-ahead':
                 text_delta = '+%.1f' % (car.delta / 1000)
                 color = DARK_RED
+            elif status == 'racing-behind':
+                text_delta = '%.1f' % (car.delta / 1000)
+            elif status == 'racing-ahead':
+                text_delta = '+%.1f' % (car.delta / 1000)
 
             if info.graphics.session != 2 and color != GREY_60:
                 # Only use colors in race mode
