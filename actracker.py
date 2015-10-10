@@ -24,7 +24,7 @@ sys.path.insert(
     0, os.path.join(os.path.dirname(__file__),
                     'actrackerDLL/%s' % platform.architecture()[0])
 )
-from boxboxDLL.sim_info import info
+from actrackerDLL.sim_info import info
 
 app_size_x = 300
 app_size_y = 200
