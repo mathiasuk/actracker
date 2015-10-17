@@ -21,8 +21,7 @@ import sys
 import traceback
 
 sys.path.insert(
-    0, os.path.join(os.path.dirname(__file__),
-                    'actrackerDLL/%s' % platform.architecture()[0])
+   0, 'apps/python/actracker/actrackerDLL/%s/' % platform.architecture()[0]
 )
 from actrackerDLL.sim_info import info
 
